@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import Select  # Import Select class
 # from selenium.webdriver.common.by import By
 from locators import ParkCalcPageLocators
 from selenium.webdriver.support.ui import WebDriverWait
+from park_calc_page import ParkCalcPage
 from selenium.webdriver.support import expected_conditions as EC
 import datetime
 
@@ -18,7 +19,6 @@ def driver():
     chrome_service = Service(executable_path=chromedriver_path)
     driver = WebDriver(service=chrome_service, options=chrome_options)
     yield driver
-    driver.quit()
 
 
 @pytest.fixture(autouse=True)
@@ -126,595 +126,416 @@ def test_parking_lot_selection(driver, parking_lot_options):
     assert available_options == parking_lot_options, "Parking lot options do not match expected values."
 
 
-# Looping through the parking options to check if all options are visible
-def test_parking_lot_selection(driver, parking_lot_options):
-    parking_lot_element = driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS)
-    parking_lot_element.click()
-
-    parking_lot_select = Select(parking_lot_element)
-    available_options = [option.text for option in parking_lot_select.options]
-
-    assert available_options == parking_lot_options, "Parking lot options do not match expected values."
-
-
 # Valet Parking Functional Tests
 
+@pytest.mark.functional_tests
 def test_valet_parking_equal_5h(driver):
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/1992")
-    assert start_date.get_attribute("value") == "09/01/1992"
-
-    start_date = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_date.clear()
-    start_date.send_keys("12:00")
-    assert start_date.get_attribute("value") == "12:00"
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/1992")
-    assert leaving_date.get_attribute("value") == "09/01/1992"
-
-    start_date = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    start_date.clear()
-    start_date.send_keys("12:00")
-    assert start_date.get_attribute("value") == "12:00"
-
-    submit_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    submit_button.click()
+    park_calc_page = ParkCalcPage(driver)
+    park_calc_page.set_starting_date("09/01/1992")
+    park_calc_page.set_starting_time("12:00")
+    park_calc_page.set_leaving_date("09/01/1992")
+    park_calc_page.set_leaving_time("12:00")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 12.00"
 
 
+@pytest.mark.functional_tests
 def test_valet_parking_less_than_5h(driver):
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
+    park_calc_page = ParkCalcPage(driver)
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("11:00")
+    park_calc_page.set_leaving_date("09/01/2023")
+    park_calc_page.set_leaving_time("14:00")
 
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("11:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("14:00")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
+    park_calc_page.submit_button()
 
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 12.00"
 
 
+@pytest.mark.functional_tests
 def test_valet_parking_more_than_5h_less_than_1d(driver):
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
+    park_calc_page = ParkCalcPage(driver)
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("12:00")
+    park_calc_page.set_leaving_date("09/01/2023")
+    park_calc_page.set_leaving_time("19:00")
 
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("12:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("19:00")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
-
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 18.00"
 
 
+@pytest.mark.functional_tests
 def test_valet_parking_for_1d(driver):
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
+    park_calc_page = ParkCalcPage(driver)
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("12:00")
+    park_calc_page.set_leaving_date("09/02/2023")
+    park_calc_page.set_leaving_time("12:00")
 
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("12:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/02/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("12:00")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
+    park_calc_page.submit_button()
 
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 18.00"
 
 
+@pytest.mark.functional_tests
 def test_valet_parking_multiple_days(driver):
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
+    park_calc_page = ParkCalcPage(driver)
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("12:00")
+    park_calc_page.set_leaving_date("09/02/2023")
+    park_calc_page.set_leaving_time("15:00")
 
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("12:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/02/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("15:00")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
+    park_calc_page.submit_button()
 
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 36.00"
 
 
+@pytest.mark.functional_tests
 def test_valet_parking_no_parking(driver):
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
+    park_calc_page = ParkCalcPage(driver)
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/01/2023")
+    park_calc_page.set_leaving_time("10:00")
 
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("10:00")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
+    park_calc_page.submit_button()
 
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 0.00"
 
 
 # Short Term Parking Functional Tests
-
+@pytest.mark.functional_tests
 def test_short_term_parking_1_hour(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:40")
+    park_calc_page.set_leaving_date("09/01/2023")
+    park_calc_page.set_leaving_time("11:40")
 
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:40")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("11:40")
-
-    submit_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    submit_button.click()
+    park_calc_page.submit_button()
 
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 2.00"
 
 
+@pytest.mark.functional_tests
 def test_short_term_parking_1_2_hours(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/01/2023")
+    park_calc_page.set_leaving_time("11:12")
 
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("11:12")
-
-    submit_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    submit_button.click()
+    park_calc_page.submit_button()
 
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 3.00"
 
 
+@pytest.mark.functional_tests
 def test_short_term_parking_1_7_hours(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("11:42")
-
-    submit_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    submit_button.click()
-
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/01/2023")
+    park_calc_page.set_leaving_time("11:42")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 4.00"
 
 
+@pytest.mark.functional_tests
 def test_short_term_parking_24_hours(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/02/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("10:00")
-
-    submit_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    submit_button.click()
-
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/02/2023")
+    park_calc_page.set_leaving_time("10:00")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 24.00"
 
 
+@pytest.mark.functional_tests
 def test_short_term_parking_25_hours(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/02/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("11:00")
-
-    submit_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    submit_button.click()
-
+    park_calc_page.set_starting_date("09/02/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/03/2023")
+    park_calc_page.set_leaving_time("11:00")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 26.00"
 
 
+@pytest.mark.functional_tests
 def test_short_term_parking_no_parking(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("10:00")
-
-    submit_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    submit_button.click()
-
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/01/2023")
+    park_calc_page.set_leaving_time("10:00")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 0.00"
 
 
+@pytest.mark.BVA_tests
 # BVA TESTS
 def test_short_term_boundary_additional_halfhour(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("11:29")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
-
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/01/2023")
+    park_calc_page.set_leaving_time("11:29")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 3.00"
 
 
+@pytest.mark.BVA_tests
 def test_short_term_boundary_additional_hour(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("11:30")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
-
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/01/2023")
+    park_calc_page.set_leaving_time("11:30")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 3.00"
 
 
+@pytest.mark.BVA_tests
 def test_short_term_boundary_daily_maximum(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/02/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("09:59")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
-
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/02/2023")
+    park_calc_page.set_leaving_time("09:59")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 24.00"
 
 
+@pytest.mark.BVA_tests
 def test_short_term_boundary_daily_maximum_exact(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/02/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("10:00")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
-
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/02/2023")
+    park_calc_page.set_leaving_time("10:00")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 24.00"
 
 
+@pytest.mark.BVA_tests
 def test_short_term_boundary_after_daily_maximum(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/02/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("10:01")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
-
+    park_calc_page.set_starting_date("09/01/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("09/02/2023")
+    park_calc_page.set_leaving_time("10:01")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 25.00"
 
 
 # Long-term Garage Parking
-
-def test_long_term_1_hour(driver):
+@pytest.mark.functional_tests
+def test_long_parking_for_2_hours(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("11:00")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
-
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("01/20/2023")
+    park_calc_page.set_leaving_time("12:00")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
-    assert parking_cost.text
+    assert parking_cost.text == "$ 4.00"
 
 
-def test_long_term_6_hours(driver):
+@pytest.mark.functional_tests
+def test_long_parking_for_5_hours(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("01/20/2023")
+    park_calc_page.set_leaving_time("15:00")
+    park_calc_page.submit_button()
+    parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
+    assert parking_cost.text == "$ 10.00"
 
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
 
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/01/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("16:00")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
-
+@pytest.mark.functional_tests
+def test_long_parking_for_a_day(driver):
+    park_calc_page = ParkCalcPage(driver)
+    driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
+    driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("01/21/2023")
+    park_calc_page.set_leaving_time("10:00")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 12.00"
 
 
-def test_long_term_24_hours(driver):
+@pytest.mark.functional_tests
+def test_long_parking_for_a_week(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("01/27/2023")
+    park_calc_page.set_leaving_time("10:00")
+    park_calc_page.submit_button()
+    parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
+    assert parking_cost.text == "$ 72.00"
 
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
 
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/02/2023")
+@pytest.mark.functional_tests
+def test_long_parking_for_a_week_with_extra_day(driver):
+    park_calc_page = ParkCalcPage(driver)
+    driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
+    driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("01/28/2023")
+    park_calc_page.set_leaving_time("10:00")
+    park_calc_page.submit_button()
+    parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
+    assert parking_cost.text == "$ 84.00"
 
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("10:00")
 
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
+@pytest.mark.functional_tests
+def test_long_parking_for_4_days(driver):
+    park_calc_page = ParkCalcPage(driver)
+    driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
+    driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("01/24/2023")
+    park_calc_page.set_leaving_time("10:00")
+    park_calc_page.submit_button()
+    parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
+    assert parking_cost.text == "$ 48.00"
 
+
+@pytest.mark.functional_tests
+def test_long_parking_for_less_than_an_hour(driver):
+    park_calc_page = ParkCalcPage(driver)
+    driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
+    driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("01/20/2023")
+    park_calc_page.set_leaving_time("10:30")
+    park_calc_page.submit_button()
+    parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
+    assert parking_cost.text == "$ 2.00"
+
+
+@pytest.mark.functional_tests
+def test_long_parking_for_exact_week_but_not_a_whole_day_on_7th(driver):
+    park_calc_page = ParkCalcPage(driver)
+    driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
+    driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("11:00")
+    park_calc_page.set_leaving_date("01/27/2023")
+    park_calc_page.set_leaving_time("09:00")
+    park_calc_page.submit_button()
+    parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
+    assert parking_cost.text == "$ 72.00"
+
+
+@pytest.mark.functional_tests
+def test_long_parking_for_additional_hours_over_weekly_maximum(driver):
+    park_calc_page = ParkCalcPage(driver)
+    driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
+    driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("01/27/2023")
+    park_calc_page.set_leaving_time("14:00")
+    park_calc_page.submit_button()
+    parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
+    assert parking_cost.text == "$ 80.00"
+
+
+@pytest.mark.functional_tests
+def test_parking_for_multiple_weeks(driver):
+    park_calc_page = ParkCalcPage(driver)
+    driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
+    driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("02/03/2023")
+    park_calc_page.set_leaving_time("10:00")
+    park_calc_page.submit_button()
+    parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
+    assert parking_cost.text == "$ 144.00"
+
+
+@pytest.mark.functional_tests
+def test_half_day_parking(driver):
+    park_calc_page = ParkCalcPage(driver)
+    driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
+    driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("08:00")
+    park_calc_page.set_leaving_date("01/20/2023")
+    park_calc_page.set_leaving_time("14:00")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
     assert parking_cost.text == "$ 12.00"
 
 
-def test_long_term_30_hours(driver):
+@pytest.mark.functional_tests
+def test_one_and_a_half_day_parking(driver):
+    park_calc_page = ParkCalcPage(driver)
     driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
     driver.find_element(*ParkCalcPageLocators.LONG_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("09/01/2023")
-
-    start_time = driver.find_element(*ParkCalcPageLocators.STARTING_TIME_FIELD)
-    start_time.clear()
-    start_time.send_keys("10:00")
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("09/02/2023")
-
-    leaving_time = driver.find_element(*ParkCalcPageLocators.LEAVING_TIME_FIELD)
-    leaving_time.clear()
-    leaving_time.send_keys("16:00")
-
-    calculate_button = driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON)
-    calculate_button.click()
-
+    park_calc_page.set_starting_date("01/20/2023")
+    park_calc_page.set_starting_time("10:00")
+    park_calc_page.set_leaving_date("01/21/2023")
+    park_calc_page.set_leaving_time("14:00")
+    park_calc_page.submit_button()
     parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
-    assert parking_cost.text == "$ 24.00"
-
-
-# EXAMPLE
-def test_short_term_parking(driver):
-    driver.find_element(*ParkCalcPageLocators.PARKING_LOT_OPTIONS).click()
-    driver.find_element(*ParkCalcPageLocators.SHORT_TERM_PARKING).click()
-    start_date = driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD)
-    start_date.clear()
-    start_date.send_keys("01/01/1992")
-    assert start_date.get_attribute("value") == "01/01/1992"
-
-    leaving_date = driver.find_element(*ParkCalcPageLocators.LEAVING_DATE_FIELD)
-    leaving_date.clear()
-    leaving_date.send_keys("01/01/1992")
-    assert leaving_date.get_attribute("value") == "01/01/1992"
-
-    driver.find_element(*ParkCalcPageLocators.CALCULATE_BUTTON).click()
-
-    parking_cost = driver.find_element(*ParkCalcPageLocators.PARKING_COST_AMOUNT)
-    assert parking_cost.text.split(' ')[1] == "2.00"
-
-
-# def test_valet_parking_visibility(driver):
-#     valet_parking = driver.find_element_by_xpath("//a[@name='Valet']")
-#     assert valet_parking.is_displayed()
-#
-#
-# def test_valet_parking_price_visibility(driver):
-#     price = driver.find_element_by_xpath("//p[contains(text(),'$18 per day')]")
-#     assert price.is_displayed()
+    assert parking_cost.text == "$ 20.00"
 
 
 def test_entry_calendar_window_opens(driver):
@@ -730,13 +551,13 @@ def test_entry_calendar_window_opens(driver):
 
 
 def test_entry_calendar_selects_correct_date(driver):
-    assert driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD).get_property("value") == "MM/DD/YYYY"
+    assert driver.find_element(*ParkCalcPageLocators.STARTING_DATE_FIELD).get_property("value") == "MM/DD/YYYY"
     ParkCalcPageLocators.open_entry_calendar(driver)
     WebDriverWait(driver, 10).until(EC.number_of_windows_to_be(2))
     driver.switch_to.window(driver.window_handles[1])
     driver.find_element(*ParkCalcPageLocators.FIRST_DAY_OF_A_MONTH).click()
     driver.switch_to.window(driver.window_handles[0])
-    assert driver.find_element(*ParkCalcPageLocators.START_DATE_FIELD).get_property("value") == "9/1/2023"
+    assert driver.find_element(*ParkCalcPageLocators.STARTING_DATE_FIELD).get_property("value") == "9/1/2023"
 
 
 def test_leaving_calendar_opens(driver):
